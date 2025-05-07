@@ -50,9 +50,7 @@
         ],
 
         "post-install-cmd": [
-            "@php artisan cache:clear",
-            "@php artisan config:clear",
-            "@php artisan route:clear",
+            "@php artisan migrate:clear",
             "@php artisan migrate --force",
             "@php artisan config:clear"
         ],
