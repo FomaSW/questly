@@ -1,16 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Telegram\Bot\Laravel\Facades\Telegram;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::post('/' . env('TELEGRAM_BOT_TOKEN') . '/webhook', [BotController::class, 'handleWebhook']);
 
-Route::get('/env-check', function () {
-    return [
-        'app_env' => \Illuminate\Support\Env::getRepository(),
-        'app_url' => env('APP_URL'),
-        'db_host' => env('DB_HOST'),
-        'telegram_token' => env('TELEGRAM_BOT_TOKEN'),
-    ];
+
+Route::post('/telegram/webhook', function () {
+    $update = Telegram::commandsHandler(true);
+    return response()->json(['status' => 'ok']);
 });
