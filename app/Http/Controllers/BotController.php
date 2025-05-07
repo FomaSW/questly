@@ -14,7 +14,7 @@ class BotController extends Controller
     public function handleWebhook(Request $request): \Illuminate\Http\JsonResponse
     {
         $data = $request->all();
-        var_dump($data);
+        var_dump($data);die();
         if (isset($data['message'])) {
             $this->handleMessage($data['message']);
         } elseif (isset($data['callback_query'])) {
