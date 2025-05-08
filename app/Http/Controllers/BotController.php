@@ -40,10 +40,11 @@ class BotController extends Controller
                 'last_name' => $message['from']['last_name'] ?? null
             ]
         );
-
-        if ($user->lang !== null) {
-            app()->setLocale($localeMap[$user->lang] ?? 'uk');
-        }
+        $locale = [
+            0 => 'uk',
+            1 => 'en',
+            2 => 'ru',
+        ];
 
         $languages = [
             '🇺🇦 Українська' => 0,
@@ -51,11 +52,13 @@ class BotController extends Controller
             '💩 Русский' => 2,
         ];
 
-        $locale = [
-            0 => 'uk',
-            1 => 'en',
-            2 => 'ru',
-        ];
+
+        if ($user->lang !== null) {
+            app()->setLocale($locale[$user->lang] ?? 'uk');
+        }
+
+
+
 
         if ($text === '/start') {
             $this->sendMessage($chatId, app()->getLocale());
