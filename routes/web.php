@@ -7,4 +7,9 @@ use Telegram\Bot\Laravel\Facades\Telegram;
 //Route::post('/' . env('TELEGRAM_BOT_TOKEN') . '/webhook', [BotController::class, 'handleWebhook']);
 //
 
-//Route::post('/telegram/webhook',[BotController::class, 'handleWebhook']);
+Route::post('/telegram/webhook',[BotController::class, 'handleWebhook']);
+
+
+Route::get('/test', function () {
+    return response()->json(['status' => 'Web route is working']);
+});
