@@ -44,6 +44,25 @@ class BotController extends Controller
             ]
         );
 
+        if ($text === '/start') {
+            $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇵🇱 Polski", [
+                'reply_markup' => [
+                    'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇵🇱 Polski']],
+                    'one_time_keyboard' => true,
+                    'resize_keyboard' => true,
+                ]
+            ]);
+            return;
+        }
+
+        if (isset($languages[$text])) {
+            $user->language = $languages[$text];
+            $user->save();
+
+            $this->sendMessage($chatId, "✅ Мову встановлено. Тепер можеш використовувати команди.");
+            return;
+        }
+
         // Обробка команд
         if (strpos($text, '/додати') === 0) {
             $this->addTask($chatId, $text);
