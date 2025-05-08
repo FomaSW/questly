@@ -42,14 +42,20 @@ class BotController extends Controller
         );
 
         $languages = [
-            '🇺🇦 Українська' => '0',
-            '🇬🇧 English' => '1',
-            '💩 Руский' => '2',
+            '🇺🇦 Українська' => 0,
+            '🇬🇧 English' => 1,
+            '🇷🇺 Русский' => 2,
+        ];
+
+        $locale = [
+            0 => 'uk',
+            1 => 'en',
+            2 => 'ru',
         ];
 
         if ($text === '/start') {
-            if ($user->language) {
-                app()->setLocale($user->language);
+            if ($user->language !== null) {
+                app()->setLocale($locale[$user->language] ?? 'uk');
                 $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                     'reply_markup' => [
                         'keyboard' => [
@@ -61,9 +67,9 @@ class BotController extends Controller
                     ]
                 ]);
             } else {
-                $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇵🇱 Polski", [
+                $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇷🇺 Русский", [
                     'reply_markup' => [
-                        'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇵🇱 Polski']],
+                        'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇷🇺 Русский']],
                         'one_time_keyboard' => true,
                         'resize_keyboard' => true,
                     ]
@@ -72,11 +78,11 @@ class BotController extends Controller
             return;
         }
 
-        if (!$user->language && isset($languages[$text])) {
+        if ($user->language === null && isset($languages[$text])) {
             $user->language = $languages[$text];
             $user->save();
 
-            app()->setLocale($user->language);
+            app()->setLocale($locale[$user->language]);
 
             $this->sendMessage($chatId, __("bot.language_selected"));
             $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
