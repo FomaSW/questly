@@ -2,6 +2,10 @@
 
 return [
     'welcome' => "👋 Hello, :name! This is Questly bot. Use /add to create a task.",
+    'add' => "📝 Add task",
+    'list' => "📋 Task list",
+    'settings' => "⚙️ Settings",
+    'language' => "🌍 Change language",
     'only_private' => "🚫 Bot only works in private chats.",
     'add_help' => "❗ Please write the task name after /add. Example: /add Buy bread",
     'task_added' => "✅ Task added!",

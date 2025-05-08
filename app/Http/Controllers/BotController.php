@@ -28,7 +28,7 @@ class BotController extends Controller
         $text = trim($message['text'] ?? '');
 
         if ($message['chat']['type'] !== 'private') {
-            $this->sendMessage($chatId, "🚫 Бот працює лише в особистих чатах.");
+            $this->sendMessage($chatId, __('bot.only_private'));
             return;
         }
 
@@ -72,9 +72,9 @@ class BotController extends Controller
                     ]
                 ]);
             } else {
-                $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇷🇺 Русский", [
+                $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n💩 Русский", [
                     'reply_markup' => [
-                        'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇷🇺 Русский']],
+                        'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['💩 Русский']],
                         'one_time_keyboard' => true,
                         'resize_keyboard' => true,
                     ]
@@ -93,9 +93,9 @@ class BotController extends Controller
             $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                 'reply_markup' => [
                     'keyboard' => [
-                        ['📝 Додати завдання'],
-                        ['📋 Список задач'],
-                        ['⚙️ Налаштування'],
+                        [__('bot.add')],
+                        [__('bot.list')],
+                        [__('bot.settings')],
                     ],
                     'resize_keyboard' => true,
                 ]
@@ -104,24 +104,24 @@ class BotController extends Controller
         }
 
         // Основні команди
-        if ($text === '📝 Додати завдання') {
+        if ($text === __('bot.add')) {
             $this->sendMessage($chatId, "✏️ Напиши завдання у форматі:\n/додати Твоя назва задачі [пріоритет: високий|середній|низький]");
-        } elseif ($text === '📋 Список задач' || strpos($text, '/список') === 0) {
+        } elseif ($text === __('bot.list')) {
             $this->listTasks($chatId);
-        } elseif ($text === '⚙️ Налаштування') {
+        } elseif ($text === __('bot.settings')) {
             $this->sendMessage($chatId, __("bot.settings_menu"), [
                 'reply_markup' => [
                     'keyboard' => [
-                        ['🌍 Змінити мову'],
+                        [__('bot.language')],
                         ['⬅️ Назад']
                     ],
                     'resize_keyboard' => true,
                 ]
             ]);
         } elseif ($text === '🌍 Змінити мову') {
-            $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇷🇺 Русский", [
+            $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n💩 Русский", [
                 'reply_markup' => [
-                    'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇷🇺 Русский']],
+                    'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['💩 Русский']],
                     'one_time_keyboard' => true,
                     'resize_keyboard' => true,
                 ]
