@@ -54,8 +54,8 @@ class BotController extends Controller
         ];
 
         if ($text === '/start') {
-            if ($user->language !== null) {
-                app()->setLocale($locale[$user->language] ?? 'uk');
+            if ($user->lang !== null) {
+                app()->setLocale($locale[$user->lang] ?? 'uk');
                 $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                     'reply_markup' => [
                         'keyboard' => [
@@ -78,11 +78,11 @@ class BotController extends Controller
             return;
         }
 
-        if ($user->language === null && isset($languages[$text])) {
-            $user->language = $languages[$text];
+        if ($user->lang === null && isset($languages[$text])) {
+            $user->lang = $languages[$text];
             $user->save();
 
-            app()->setLocale($locale[$user->language]);
+            app()->setLocale($locale[$user->lang]);
 
             $this->sendMessage($chatId, __("bot.language_selected"));
             $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
