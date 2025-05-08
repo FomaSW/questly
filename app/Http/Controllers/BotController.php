@@ -79,12 +79,12 @@ class BotController extends Controller
             return;
         }
 
-        if ($user->lang === null && isset($languages[$text])) {
+        if (isset($languages[$text])) {
             $user->lang = $languages[$text];
             $user->save();
 
             app()->setLocale($locale[$user->lang]);
-
+            $this->sendMessage($chatId, $locale[$user->lang]);
             $this->sendMessage($chatId, __("bot.language_selected"));
             $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                 'reply_markup' => [
@@ -105,7 +105,23 @@ class BotController extends Controller
         } elseif ($text === '📋 Список задач' || strpos($text, '/список') === 0) {
             $this->listTasks($chatId);
         } elseif ($text === '⚙️ Налаштування') {
-            $this->sendMessage($chatId, "⚙️ Налаштування в розробці. Слідкуй за оновленнями 😉");
+            $this->sendMessage($chatId, __("bot.settings_menu"), [
+                'reply_markup' => [
+                    'keyboard' => [
+                        ['🌍 Змінити мову'],
+                        ['⬅️ Назад']
+                    ],
+                    'resize_keyboard' => true,
+                ]
+            ]);
+        } elseif ($text === '🌍 Змінити мову') {
+            $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇷🇺 Русский", [
+                'reply_markup' => [
+                    'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇷🇺 Русский']],
+                    'one_time_keyboard' => true,
+                    'resize_keyboard' => true,
+                ]
+            ]);
         } elseif (strpos($text, '/додати') === 0) {
             $this->addTask($chatId, $text);
         } elseif (Cache::has("edit_{$chatId}")) {
