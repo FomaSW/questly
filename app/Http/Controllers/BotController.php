@@ -41,6 +41,10 @@ class BotController extends Controller
             ]
         );
 
+        if ($user->lang !== null) {
+            app()->setLocale($localeMap[$user->lang] ?? 'uk');
+        }
+
         $languages = [
             '🇺🇦 Українська' => 0,
             '🇬🇧 English' => 1,
