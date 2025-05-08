@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -28,13 +27,11 @@ class BotController extends Controller
         $chatId = $message['chat']['id'];
         $text = trim($message['text'] ?? '');
 
-        // Перевірка, чи це особистий чат
         if ($message['chat']['type'] !== 'private') {
             $this->sendMessage($chatId, "🚫 Бот працює лише в особистих чатах.");
             return;
         }
 
-        // Збереження або оновлення користувача
         $user = User::updateOrCreate(
             ['chat_id' => $chatId],
             [
@@ -44,34 +41,70 @@ class BotController extends Controller
             ]
         );
 
+        $languages = [
+            '🇺🇦 Українська' => 'uk',
+            '🇬🇧 English' => 'en',
+            '🇵🇱 Polski' => 'pl',
+        ];
+
         if ($text === '/start') {
-            $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇵🇱 Polski", [
+            if ($user->language) {
+                app()->setLocale($user->language);
+                $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
+                    'reply_markup' => [
+                        'keyboard' => [
+                            ['📝 Додати завдання'],
+                            ['📋 Список задач'],
+                            ['⚙️ Налаштування'],
+                        ],
+                        'resize_keyboard' => true,
+                    ]
+                ]);
+            } else {
+                $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n🇵🇱 Polski", [
+                    'reply_markup' => [
+                        'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇵🇱 Polski']],
+                        'one_time_keyboard' => true,
+                        'resize_keyboard' => true,
+                    ]
+                ]);
+            }
+            return;
+        }
+
+        if (!$user->language && isset($languages[$text])) {
+            $user->language = $languages[$text];
+            $user->save();
+
+            app()->setLocale($user->language);
+
+            $this->sendMessage($chatId, __("bot.language_selected"));
+            $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                 'reply_markup' => [
-                    'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['🇵🇱 Polski']],
-                    'one_time_keyboard' => true,
+                    'keyboard' => [
+                        ['📝 Додати завдання'],
+                        ['📋 Список задач'],
+                        ['⚙️ Налаштування'],
+                    ],
                     'resize_keyboard' => true,
                 ]
             ]);
             return;
         }
 
-        if (isset($languages[$text])) {
-            $user->language = $languages[$text];
-            $user->save();
-
-            $this->sendMessage($chatId, "✅ Мову встановлено. Тепер можеш використовувати команди.");
-            return;
-        }
-
-        // Обробка команд
-        if (strpos($text, '/додати') === 0) {
-            $this->addTask($chatId, $text);
-        } elseif (strpos($text, '/список') === 0) {
+        // Основні команди
+        if ($text === '📝 Додати завдання') {
+            $this->sendMessage($chatId, "✏️ Напиши завдання у форматі:\n/додати Твоя назва задачі [пріоритет: високий|середній|низький]");
+        } elseif ($text === '📋 Список задач' || strpos($text, '/список') === 0) {
             $this->listTasks($chatId);
+        } elseif ($text === '⚙️ Налаштування') {
+            $this->sendMessage($chatId, "⚙️ Налаштування в розробці. Слідкуй за оновленнями 😉");
+        } elseif (strpos($text, '/додати') === 0) {
+            $this->addTask($chatId, $text);
         } elseif (Cache::has("edit_{$chatId}")) {
             $this->updateTaskTitle($chatId, $text);
         } else {
-            $this->sendMessage($chatId, "🤖 Я не впізнаю цю команду. Спробуй /додати або /список.");
+            $this->sendMessage($chatId, "🤖 Я не впізнаю цю команду. Обери дію з меню або спробуй /додати чи /список.");
         }
     }
 
@@ -97,7 +130,7 @@ class BotController extends Controller
                 $this->sendMessage($chatId, "🗑 Задачу видалено.");
                 break;
             case 'edit':
-                Cache::put("edit_{$chatId}", $taskId, now()->addMinutes(5));
+                Cache::put("edit_{$chatId}", $task->id, now()->addMinutes(5));
                 $this->sendMessage($chatId, "✏️ Введи нову назву для задачі:");
                 break;
             case 'move':
@@ -137,7 +170,10 @@ class BotController extends Controller
 
     protected function listTasks($chatId)
     {
-        $tasks = Task::where('chat_id', $chatId)->where('is_done', false)->orderByRaw("FIELD(priority, 'високий', 'середній', 'низький')")->get();
+        $tasks = Task::where('chat_id', $chatId)
+            ->where('is_done', false)
+            ->orderByRaw("FIELD(priority, 'високий', 'середній', 'низький')")
+            ->get();
 
         if ($tasks->isEmpty()) {
             $this->sendMessage($chatId, "📭 У тебе немає активних задач.");
@@ -188,12 +224,12 @@ class BotController extends Controller
         ]);
     }
 
-    protected function sendMessage($chatId, $text)
+    protected function sendMessage($chatId, $text, array $options = [])
     {
-        Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/sendMessage", [
+        Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/sendMessage", array_merge([
             'chat_id' => $chatId,
             'text' => $text,
-        ]);
+        ], $options));
     }
 
     protected function getMotivationMessage(): string
