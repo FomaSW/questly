@@ -118,7 +118,7 @@ class BotController extends Controller
                     'resize_keyboard' => true,
                 ]
             ]);
-        } elseif ($text === '🌍 Змінити мову') {
+        } elseif ($text === __('bot.language')) {
             $this->sendMessage($chatId, "🌍 Обери мову:\n🇺🇦 Українська\n🇬🇧 English\n💩 Русский", [
                 'reply_markup' => [
                     'keyboard' => [['🇺🇦 Українська'], ['🇬🇧 English'], ['💩 Русский']],
