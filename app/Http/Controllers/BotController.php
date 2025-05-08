@@ -42,9 +42,9 @@ class BotController extends Controller
         );
 
         $languages = [
-            '🇺🇦 Українська' => 'uk',
-            '🇬🇧 English' => 'en',
-            '🇵🇱 Polski' => 'pl',
+            '🇺🇦 Українська' => '0',
+            '🇬🇧 English' => '1',
+            '💩 Руский' => '2',
         ];
 
         if ($text === '/start') {
