@@ -54,7 +54,7 @@ class BotController extends Controller
         ];
 
         if ($text === '/start') {
-            var_dump(app()->getLocale());
+            $this->sendMessage($chatId, app()->getLocale());
             if ($user->lang !== null) {
                 app()->setLocale($locale[$user->lang] ?? 'uk');
                 $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
