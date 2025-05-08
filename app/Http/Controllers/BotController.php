@@ -61,15 +61,14 @@ class BotController extends Controller
 
 
         if ($text === '/start') {
-            $this->sendMessage($chatId, app()->getLocale());
             if ($user->lang !== null) {
                 app()->setLocale($locale[$user->lang] ?? 'uk');
                 $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                     'reply_markup' => [
-                        'keyboard' => [
-                            ['📝 Додати завдання'],
-                            ['📋 Список задач'],
-                            ['⚙️ Налаштування'],
+                        'inline_keyboard' => [
+                            [__('bot.add')],
+                            [__('bot.list')],
+                            [__('bot.settings')],
                         ],
                         'resize_keyboard' => true,
                     ]
