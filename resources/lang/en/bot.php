@@ -73,4 +73,8 @@ return [
     'archive_title'=> 'Archive',
     'today' => 'Today',
     'tomorrow' => 'Tomorrow',
+
+    'archive_select_day' => 'Select a day:',
+    'archive_empty_day' => 'Empty tasks for {date}',
+    'back_to_archive' => '↩️ To archive',
 ];

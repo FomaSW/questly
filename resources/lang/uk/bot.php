@@ -73,4 +73,8 @@ return [
     'archive_title'=> 'Архів',
     'today' => 'Сьогодні',
     'tomorrow' => 'Завтра',
+
+    'archive_select_day' => 'Оберіть день для перегляду архіву:',
+    'archive_empty_day' => 'Немає виконаних завдань за {date}',
+    'back_to_archive' => '↩️ До архіву',
 ];

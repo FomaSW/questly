@@ -150,6 +150,17 @@ class BotController extends Controller
             return;
         }
 
+        if (str_starts_with($data, 'archive_day:')) {
+            $date = explode(':', $data)[1];
+            $this->showArchiveForDay($chatId, $date);
+            return;
+        }
+
+        if ($data === 'back_to_archive') {
+            $this->showArchive($chatId);
+            return;
+        }
+
         if (str_starts_with($data, 'deadline:')) {
             $choice = explode(':', $data)[1];
             $this->setTaskDeadline($chatId, $choice);
@@ -404,33 +415,66 @@ class BotController extends Controller
 
     protected function showArchive($chatId)
     {
+        $today = Carbon::today();
+        $tenDaysAgo = $today->copy()->subDays(9); // 10 днів включаючи сьогодні
+
+        // Створюємо кнопки для кожного дня
+        $daysButtons = [];
+        for ($i = 9; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i);
+            $daysButtons[] = [
+                'text' => $date->format('d.m.Y'),
+                'callback_data' => 'archive_day:' . $date->format('Y-m-d')
+            ];
+        }
+
+        // Розбиваємо на ряди по 2 кнопки
+        $chunkedButtons = array_chunk($daysButtons, 2);
+
+        // Додаємо кнопку "Назад"
+        $chunkedButtons[] = [['text' => __('bot.back_to_menu'), 'callback_data' => 'back_to_main']];
+
+        $this->sendMessage($chatId, __('bot.archive_select_day'), [
+            'reply_markup' => [
+                'inline_keyboard' => $chunkedButtons
+            ]
+        ]);
+    }
+
+    protected function showArchiveForDay($chatId, $date)
+    {
+        $date = Carbon::parse($date);
         $tasks = Task::where('chat_id', $chatId)
-            ->where('deadline', true)
+            ->whereDate('deadline', $date)
+            ->where('is_done', true)
             ->orderBy('deadline', 'desc')
-            ->take(10)
             ->get();
 
         if ($tasks->isEmpty()) {
-            $this->sendMessage($chatId, __('bot.archive_empty'), $this->mainMenuKeyboard());
+            $this->sendMessage($chatId, __('bot.archive_empty_day', [
+                'date' => $date->format('d.m.Y')
+            ]), $this->archiveDayKeyboard($date));
             return;
         }
 
-        $this->sendMessage($chatId, __('bot.archive_title'));
-
+        $message = "📅 Архів за " . $date->format('d.m.Y') . ":\n\n";
         foreach ($tasks as $task) {
-            $this->sendMessage(
-                $chatId,
-                "✅ {$task->title} ({$task->deadline->format('d.m.Y')})",
-                [
-                    'reply_markup' => [
-                        'inline_keyboard' => [
-                            [['text' => __('bot.delete'), 'callback_data' => "delete:{$task->id}"]],
-                            [['text' => __('bot.back_to_menu'), 'callback_data' => 'back_to_main']]
-                        ]
-                    ]
-                ]
-            );
+            $message .= "✅ {$task->title}\n";
         }
+
+        $this->sendMessage($chatId, $message, $this->archiveDayKeyboard($date));
+    }
+
+    protected function archiveDayKeyboard($date)
+    {
+        return [
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [['text' => __('bot.back_to_archive'), 'callback_data' => 'archive']],
+                    [['text' => __('bot.back_to_menu'), 'callback_data' => 'back_to_main']]
+                ]
+            ]
+        ];
     }
 
     protected function showSettings($chatId)
