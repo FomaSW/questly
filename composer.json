@@ -52,7 +52,9 @@
 
         "post-install-cmd": [
             "@php artisan migrate --force",
-            "@php artisan config:clear"
+            "@php artisan config:clear",
+            "@php artisan queue:work --tries=3 --timeout=30",
+            "@php artisan schedule:work"
         ],
 
         "dev": [
