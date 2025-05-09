@@ -12,6 +12,32 @@ use Illuminate\Support\Facades\App;
 
 class BotController extends Controller
 {
+    // Масиви для конвертації значень
+    protected $languageCodes = [
+        0 => 'uk',
+        1 => 'en',
+        2 => 'ru'
+    ];
+
+    protected $priorityValues = [
+        'high' => 0,
+        'medium' => 1,
+        'low' => 2,
+        // Додамо також українські та російські варіанти
+        'високий' => 0,
+        'середній' => 1,
+        'низький' => 2,
+        'высокий' => 0,
+        'средний' => 1,
+        'низкий' => 2
+    ];
+
+    protected $priorityLabels = [
+        0 => 'high',
+        1 => 'medium',
+        2 => 'low'
+    ];
+
     protected function handleCallback(array $callback)
     {
         $chatId = $callback['message']['chat']['id'];
@@ -23,17 +49,16 @@ class BotController extends Controller
             $language = $user->language;
             if (is_numeric($language)) {
                 // Конвертуємо числовий індекс у код мови
-                $languageCodes = [0 => 'uk', 1 => 'en', 2 => 'ru'];
-                $language = $languageCodes[$language] ?? 'uk';
+                $language = $this->languageCodes[$language] ?? 'uk';
 
-                // Можливо, варто оновити запис користувача
+                // Оновлюємо запис користувача
                 $user->update(['language' => $language]);
             }
 
             App::setLocale($language ?? 'uk');
         }
 
-        // Решта коду залишається без змін
+        // Підтвердження обробки callback
         Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/answerCallbackQuery", [
             'callback_query_id' => $callback['id'],
         ]);
@@ -137,12 +162,8 @@ class BotController extends Controller
         $user = User::where('chat_id', $chatId)->first();
 
         if ($user) {
-            $locale = [
-                0 => 'uk',
-                1 => 'en',
-                2 => 'ru'
-            ];
-            App::setLocale($locale[$user->lang] ?? 'uk');
+            // Виправляємо використання lang на language
+            App::setLocale($this->languageCodes[$user->language] ?? 'uk');
 
             // Оновлюємо дані користувача
             $user->update([
@@ -212,27 +233,25 @@ class BotController extends Controller
 
     protected function setUserLanguage($chatId, $langCode): void
     {
-        // Перетворення числових індексів на відповідні коди мов
-        $languageCodes = [
-            0 => 'uk',
-            1 => 'en',
-            2 => 'ru'
+        // Перетворення кодів мов на числові індекси для збереження в БД
+        $langIndices = [
+            'uk' => 0,
+            'en' => 1,
+            'ru' => 2
         ];
 
-        // Якщо langCode є числом (індексом), конвертуємо його в код мови
-        if (is_numeric($langCode) && isset($languageCodes[$langCode])) {
-            $langCode = $languageCodes[$langCode];
-        }
+        // Визначаємо числовий індекс для збереження
+        $langIndex = $langIndices[$langCode] ?? 0;
 
-        // Тепер оновлюємо мову користувача
+        // Оновлюємо мову користувача
         $user = User::where('chat_id', $chatId)->first();
 
         if ($user) {
-            $user->update(['language' => $langCode]);
+            $user->update(['language' => $langIndex]);
         } else {
             User::create([
                 'chat_id' => $chatId,
-                'language' => $langCode
+                'language' => $langIndex
             ]);
         }
 
@@ -342,10 +361,11 @@ class BotController extends Controller
             return;
         }
 
+        // Використовуємо числове значення для пріоритету (1 = medium)
         $task = Task::create([
             'chat_id' => $chatId,
             'title' => $title,
-            'priority' => 'medium',
+            'priority' => 1, // Середній пріоритет за замовчуванням (числове значення)
             'is_done' => false,
         ]);
 
@@ -363,7 +383,7 @@ class BotController extends Controller
         ]);
     }
 
-    protected function setTaskPriority($chatId, $priority)
+    protected function setTaskPriority($chatId, $priorityKey)
     {
         $taskId = Cache::get("add_task_{$chatId}_task_id");
         $task = Task::where('chat_id', $chatId)->where('id', $taskId)->first();
@@ -373,7 +393,10 @@ class BotController extends Controller
             return;
         }
 
-        $task->update(['priority' => $priority]);
+        // Конвертуємо текстовий пріоритет у числовий
+        $priorityNumber = $this->priorityValues[$priorityKey] ?? 1;
+
+        $task->update(['priority' => $priorityNumber]);
 
         Cache::put("add_task_{$chatId}_step", 'get_deadline', now()->addMinutes(5));
         $this->sendMessage($chatId, __('bot.enter_deadline'));
@@ -498,16 +521,14 @@ class BotController extends Controller
 
     protected function getPriorityEmoji($priority)
     {
-        switch ($priority) {
-            case 'high':
-                return '🔥';
-            case 'medium':
-                return '⚖️';
-            case 'low':
-                return '💤';
-            default:
-                return '⚪';
-        }
+        // Конвертуємо числовий пріоритет в емодзі
+        $priorityMap = [
+            0 => '🔥', // високий
+            1 => '⚖️', // середній
+            2 => '💤'  // низький
+        ];
+
+        return $priorityMap[$priority] ?? '⚪';
     }
 
     protected function sendMessage($chatId, $text, array $options = [])
@@ -530,12 +551,8 @@ class BotController extends Controller
             ->get();
 
         foreach ($users as $user) {
-            $locale = [
-                0 => 'uk',
-                1 => 'en',
-                2 => 'ru'
-            ];
-            App::setLocale($locale[$user->lang]);
+            // Виправляємо використання lang на language
+            App::setLocale($this->languageCodes[$user->language] ?? 'uk');
 
             // Отримуємо випадкове мотиваційне повідомлення
             $message = $this->getRandomMotivationalMessage();
@@ -570,12 +587,8 @@ class BotController extends Controller
         foreach ($dayBeforeTasks as $task) {
             $user = User::where('chat_id', $task->chat_id)->first();
             if ($user) {
-                $locale = [
-                    0 => 'uk',
-                    1 => 'en',
-                    2 => 'ru'
-                ];
-                App::setLocale($locale[$user->language]);
+                // Виправляємо використання lang на language
+                App::setLocale($this->languageCodes[$user->language] ?? 'uk');
                 $this->sendMessage(
                     $task->chat_id,
                     __('bot.reminder_day_before', ['task' => $task->title, 'deadline' => $task->deadline->format('d.m.Y H:i')])
@@ -591,12 +604,8 @@ class BotController extends Controller
         foreach ($hourBeforeTasks as $task) {
             $user = User::where('chat_id', $task->chat_id)->first();
             if ($user) {
-                $locale = [
-                    0 => 'uk',
-                    1 => 'en',
-                    2 => 'ru'
-                ];
-                App::setLocale($locale[$user->lang]);
+                // Виправляємо використання lang на language
+                App::setLocale($this->languageCodes[$user->language] ?? 'uk');
                 $this->sendMessage(
                     $task->chat_id,
                     __('bot.reminder_hour_before', ['task' => $task->title, 'deadline' => $task->deadline->format('d.m.Y H:i')])
