@@ -406,7 +406,7 @@ class BotController extends Controller
             $this->sendMessage(
                 $chatId,
                 "{$priorityEmoji} {$task->title} {$done}",
-                $this->taskOptionsKeyboard($task->id)
+                $this->taskOptionsKeyboard($task->id, $task->is_done)
             );
         }
 
@@ -570,7 +570,7 @@ class BotController extends Controller
                         'task' => $task->title,
                         'deadline' => $task->deadline->format('d.m.Y')
                     ]),
-                    $this->taskOptionsKeyboard($task->id)
+                    $this->taskOptionsKeyboard($task->id, $task->is_done)
                 );
             }
         }
@@ -590,7 +590,7 @@ class BotController extends Controller
                         'task' => $task->title,
                         'deadline' => $task->deadline->format('d.m.Y H:i')
                     ]),
-                    $this->taskOptionsKeyboard($task->id)
+                    $this->taskOptionsKeyboard($task->id, $task->is_done)
                 );
             }
         }
