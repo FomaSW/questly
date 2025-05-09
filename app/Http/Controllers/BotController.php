@@ -474,6 +474,11 @@ class BotController extends Controller
     {
         $tasks = Task::where('chat_id', $chatId)
             ->orderBy('deadline')
+            ->map(function ($task) {
+                // Перетворюємо deadline з рядка на Carbon
+                $task->deadline = Carbon::parse($task->deadline);
+                return $task;
+            })
             ->take(5)
             ->get();
 
