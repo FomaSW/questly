@@ -247,11 +247,11 @@ class BotController extends Controller
         $user = User::where('chat_id', $chatId)->first();
 
         if ($user) {
-            $user->update(['language' => $langIndex]);
+            $user->update(['lang' => $langIndex]);
         } else {
             User::create([
                 'chat_id' => $chatId,
-                'language' => $langIndex
+                'lang' => $langIndex
             ]);
         }
 
