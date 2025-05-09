@@ -446,7 +446,6 @@ class BotController extends Controller
         $date = Carbon::parse($date);
         $tasks = Task::where('chat_id', $chatId)
             ->whereDate('deadline', $date)
-            ->where('is_done', true)
             ->orderBy('deadline', 'desc')
             ->get();
 
@@ -459,7 +458,9 @@ class BotController extends Controller
 
         $message = "📅 Архів за " . $date->format('d.m.Y') . ":\n\n";
         foreach ($tasks as $task) {
-            $message .= "✅ {$task->title}\n";
+            $priorityEmoji = $this->getPriorityEmoji($task->priority);
+            $done = $task->is_done ? __('bot.done') : __('bot.not_done');
+            $message .= "{$priorityEmoji} {$task->title} {$done}\n";
         }
 
         $this->sendMessage($chatId, $message, $this->archiveDayKeyboard($date));
