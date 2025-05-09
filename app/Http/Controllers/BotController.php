@@ -361,14 +361,15 @@ class BotController extends Controller
 
     protected function taskOptionsKeyboard($taskId, $is_done = false)
     {
+        $keyboard = [];
+        if (!$is_done) {
+            $keyboard[] = ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$taskId}"];
+        }
+        $keyboard[] = ['text' => __('bot.delete'), 'callback_data' => "delete:{$taskId}"];
         return [
             'reply_markup' => [
                 'inline_keyboard' => [
-                    [
-                        $is_done ? ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$taskId}"] : [],
-                        ['text' => __('bot.delete'), 'callback_data' => "delete:{$taskId}"]
-                    ],
-                    [['text' => __('bot.back_to_menu'), 'callback_data' => 'back_to_main']]
+                    $keyboard,
                 ]
             ]
         ];
