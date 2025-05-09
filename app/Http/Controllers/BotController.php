@@ -201,12 +201,14 @@ class BotController extends Controller
             'reply_markup' => [
                 'inline_keyboard' => [
                     [
-                        ['text' => __('bot.tasks'), 'callback_data' => 'tasks'],
                         ['text' => __('bot.today_tasks'), 'callback_data' => 'today_tasks'],
                         ['text' => __('bot.tomorrow_tasks'), 'callback_data' => 'tomorrow_tasks']
                     ],
                     [
+                        ['text' => __('bot.tasks'), 'callback_data' => 'tasks'],
                         ['text' => __('bot.archive'), 'callback_data' => 'archive'],
+                    ],
+                    [
                         ['text' => __('bot.add_task'), 'callback_data' => 'add_task']
                     ],
                     [
