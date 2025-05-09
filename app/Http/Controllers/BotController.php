@@ -20,16 +20,16 @@ class BotController extends Controller
     ];
 
     protected $priorityValues = [
-        'high' => 0,
-        'medium' => 1,
-        'low' => 2,
+        'high' => 1,
+        'medium' => 2,
+        'low' => 3,
         // Додамо також українські та російські варіанти
-        'високий' => 0,
-        'середній' => 1,
-        'низький' => 2,
-        'высокий' => 0,
-        'средний' => 1,
-        'низкий' => 2
+        'високий' => 1,
+        'середній' => 2,
+        'низький' => 3,
+        'высокий' => 1,
+        'средний' => 2,
+        'низкий' => 3
     ];
 
     protected $priorityLabels = [
@@ -365,8 +365,9 @@ class BotController extends Controller
         $task = Task::create([
             'chat_id' => $chatId,
             'title' => $title,
-            'priority' => 1, // Середній пріоритет за замовчуванням (числове значення)
+            'priority' => 1,
             'is_done' => false,
+            'deadline' => now()->addMinutes(5),
         ]);
 
         Cache::put("add_task_{$chatId}_task_id", $task->id, now()->addMinutes(5));
