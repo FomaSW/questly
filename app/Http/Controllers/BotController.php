@@ -19,7 +19,7 @@ class BotController extends Controller
         $user = User::where('chat_id', $chatId)->first();
 
         if ($user) {
-            App::setLocale($user->language ?? 'uk');
+            App::setLocale($user->lang ?? 'uk');
         }
 
         // Підтвердження обробки callback
@@ -199,7 +199,7 @@ class BotController extends Controller
         $user = User::updateOrCreate(
             ['chat_id' => $chatId],
             [
-                'language' => $lang,
+                'lang' => $lang,
             ]
         );
 
