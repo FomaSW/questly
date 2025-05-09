@@ -378,7 +378,6 @@ class BotController extends Controller
     {
         $tasks = Task::where('chat_id', $chatId)
             ->whereDate('deadline', $date)
-            ->where('is_done', false)
             ->orderBy('priority')
             ->get();
 
@@ -391,9 +390,10 @@ class BotController extends Controller
 
         foreach ($tasks as $task) {
             $priorityEmoji = $this->getPriorityEmoji($task->priority);
+            $done = $task->is_done ? __('bot.done') : __('bot.not_done');
             $this->sendMessage(
                 $chatId,
-                "{$priorityEmoji} {$task->title}",
+                "{$priorityEmoji} {$task->title} {$done}",
                 $this->taskOptionsKeyboard($task->id)
             );
         }
@@ -404,7 +404,7 @@ class BotController extends Controller
     protected function showArchive($chatId)
     {
         $tasks = Task::where('chat_id', $chatId)
-            ->where('is_done', true)
+            ->where('deadline', true)
             ->orderBy('deadline', 'desc')
             ->take(10)
             ->get();

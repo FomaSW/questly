@@ -63,5 +63,14 @@ return [
     'motivation_message_2' => '🌟 Every completed task brings you closer to success!',
     'motivation_message_3' => '🚀 Remember: small steps lead to great achievements.',
     'motivation_message_4' => '⏱️ Good time management is the key to productivity.',
-    'motivation_message_5' => '🌈 Believe in yourself, and you\'ll be amazed at what you can do!'
+    'motivation_message_5' => '🌈 Believe in yourself, and you\'ll be amazed at what you can do!',
+
+    'done' => '✅ Done',
+    'not_done' => 'Not Done',
+    'today_tasks' => 'Today tasks',
+    'tomorrow_tasks' => 'Tomorrow tasks',
+    'archive'=> 'Archive',
+    'archive_title'=> 'Archive',
+    'today' => 'Today',
+    'tomorrow' => 'Tomorrow',
 ];
