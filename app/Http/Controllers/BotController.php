@@ -474,13 +474,13 @@ class BotController extends Controller
     {
         $tasks = Task::where('chat_id', $chatId)
             ->orderBy('deadline')
+            ->take(5)
+            ->get()
             ->map(function ($task) {
                 // Перетворюємо deadline з рядка на Carbon
                 $task->deadline = Carbon::parse($task->deadline);
                 return $task;
-            })
-            ->take(5)
-            ->get();
+            });
 
         if ($tasks->isEmpty()) {
             $this->sendMessage($chatId, __('bot.no_tasks'), [
