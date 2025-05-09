@@ -46,7 +46,7 @@ class BotController extends Controller
 
         if ($user) {
             // Перевірка, що мова є рядком
-            $language = $user->language;
+            $language = $user->lang;
             if (is_numeric($language)) {
                 // Конвертуємо числовий індекс у код мови
                 $language = $this->languageCodes[$language] ?? 'uk';
@@ -163,7 +163,7 @@ class BotController extends Controller
 
         if ($user) {
             // Виправляємо використання lang на language
-            App::setLocale($this->languageCodes[$user->language] ?? 'uk');
+            App::setLocale($this->languageCodes[$user->lang] ?? 'uk');
 
             // Оновлюємо дані користувача
             $user->update([
@@ -558,7 +558,7 @@ class BotController extends Controller
 
         foreach ($users as $user) {
             // Виправляємо використання lang на language
-            App::setLocale($this->languageCodes[$user->language] ?? 'uk');
+            App::setLocale($this->languageCodes[$user->lang] ?? 'uk');
 
             // Отримуємо випадкове мотиваційне повідомлення
             $message = $this->getRandomMotivationalMessage();
@@ -594,7 +594,7 @@ class BotController extends Controller
             $user = User::where('chat_id', $task->chat_id)->first();
             if ($user) {
                 // Виправляємо використання lang на language
-                App::setLocale($this->languageCodes[$user->language] ?? 'uk');
+                App::setLocale($this->languageCodes[$user->lang] ?? 'uk');
                 $this->sendMessage(
                     $task->chat_id,
                     __('bot.reminder_day_before', ['task' => $task->title, 'deadline' => $task->deadline->format('d.m.Y H:i')])
@@ -611,7 +611,7 @@ class BotController extends Controller
             $user = User::where('chat_id', $task->chat_id)->first();
             if ($user) {
                 // Виправляємо використання lang на language
-                App::setLocale($this->languageCodes[$user->language] ?? 'uk');
+                App::setLocale($this->languageCodes[$user->lang] ?? 'uk');
                 $this->sendMessage(
                     $task->chat_id,
                     __('bot.reminder_hour_before', ['task' => $task->title, 'deadline' => $task->deadline->format('d.m.Y H:i')])
