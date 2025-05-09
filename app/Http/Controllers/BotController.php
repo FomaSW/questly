@@ -498,7 +498,7 @@ class BotController extends Controller
             $priorityEmoji = $this->getPriorityEmoji($task->priority);
             $deadlineText = $task->deadline ? $task->deadline->format('d.m.Y H:i') : __('bot.no_deadline');
             $keyboard = [];
-            if ($task->is_done === false) {
+            if (!$task->is_done) {
                 $keyboard[] = ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$task->id}"];
             }
             $keyboard[] = ['text' => __('bot.delete'), 'callback_data' => "delete:{$task->id}"];
