@@ -11,6 +11,19 @@ use Carbon\Carbon;
 
 class BotController extends Controller
 {
+    public function handleCallback(array $callback)
+    {
+        $chatId = $callback['message']['chat']['id'];
+        $data = $callback['data'];
+
+        if ($data === 'add_task') {
+            $this->sendMessage($chatId, "✏️ Напиши назву задачі:");
+            Cache::put("add_task_{$chatId}_step", 'get_title', now()->addMinutes(5));
+        } elseif (str_starts_with($data, 'priority:')) {
+            $priority = explode(':', $data)[1];
+            $this->setTaskPriority($chatId, $priority);
+        }
+    }
     public function handleWebhook(Request $request): \Illuminate\Http\JsonResponse
     {
         $data = $request->all();
@@ -22,8 +35,7 @@ class BotController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
-
-    protected function handleMessage(array $message)
+    public function handleMessage(array $message)
     {
         $chatId = $message['chat']['id'];
         $text = trim($message['text'] ?? '');
@@ -46,35 +58,35 @@ class BotController extends Controller
             $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                 'reply_markup' => [
                     'inline_keyboard' => [
-                        [['text' => __('bot.add'), 'callback_data' => 'add_task']],
-                        [['text' => __('bot.list'), 'callback_data' => 'list_tasks']],
-                        [['text' => __('bot.settings'), 'callback_data' => 'settings']],
-                    ],
-                    'resize_keyboard' => true,
+                        [['text' => '➕ Додати задачу', 'callback_data' => 'add_task']],
+                        [['text' => '📋 Список задач', 'callback_data' => 'list_tasks']],
+                        [['text' => '⚙️ Налаштування', 'callback_data' => 'settings']],
+                    ]
                 ]
             ]);
             return;
         }
 
-        // Основні команди
-        if ($text === __('bot.add')) {
-            $this->sendMessage($chatId, "✏️ Напиши завдання у форматі: Назва задачі");
-            Cache::put("add_task_{$chatId}_step", 'get_title', now()->addMinutes(5));
-        } elseif (Cache::get("add_task_{$chatId}_step") === 'get_title') {
+        if (Cache::get("add_task_{$chatId}_step") === 'get_title') {
             $this->startAddingTask($chatId, $text);
-        } elseif (Cache::get("add_task_{$chatId}_step") === 'get_priority') {
-            $this->setTaskPriority($chatId, $text);
         } elseif (Cache::get("add_task_{$chatId}_step") === 'get_reminder') {
             $this->setTaskReminder($chatId, $text);
         } else {
-            $this->sendMessage($chatId, "🤖 Я не впізнаю цю команду. Обери дію з меню або спробуй /додати чи /список.");
+            $this->sendMessage($chatId, "🤖 Обери дію з меню:", [
+                'reply_markup' => [
+                    'inline_keyboard' => [
+                        [['text' => '➕ Додати задачу', 'callback_data' => 'add_task']],
+                        [['text' => '📋 Список задач', 'callback_data' => 'list_tasks']],
+                        [['text' => '⚙️ Налаштування', 'callback_data' => 'settings']],
+                    ]
+                ]
+            ]);
         }
     }
-
     protected function startAddingTask($chatId, $title)
     {
         if (empty($title)) {
-            $this->sendMessage($chatId, "❗ Напиши назву задачі.");
+            $this->sendMessage($chatId, "❗ Введіть назву задачі.");
             return;
         }
 
@@ -88,20 +100,19 @@ class BotController extends Controller
         Cache::put("add_task_{$chatId}_task_id", $task->id, now()->addMinutes(5));
         Cache::put("add_task_{$chatId}_step", 'get_priority', now()->addMinutes(5));
 
-        $this->sendMessage($chatId, "📊 Вибери пріоритет для задачі:\n1. Високий\n2. Середній\n3. Низький", [
+        $this->sendMessage($chatId, "📊 Вибери пріоритет:", [
             'reply_markup' => [
                 'inline_keyboard' => [
-                    [['text' => '1. Високий', 'callback_data' => "priority:high"]],
-                    [['text' => '2. Середній', 'callback_data' => "priority:medium"]],
-                    [['text' => '3. Низький', 'callback_data' => "priority:low"]],
+                    [['text' => '🔥 Високий', 'callback_data' => 'priority:high']],
+                    [['text' => '⚖️ Середній', 'callback_data' => 'priority:medium']],
+                    [['text' => '💤 Низький', 'callback_data' => 'priority:low']],
                 ]
             ]
         ]);
     }
-
     protected function setTaskPriority($chatId, $priority)
     {
-        $taskId = Cache::pull("add_task_{$chatId}_task_id");
+        $taskId = Cache::get("add_task_{$chatId}_task_id");
         $task = Task::where('chat_id', $chatId)->where('id', $taskId)->first();
 
         if (!$task) {
@@ -109,28 +120,25 @@ class BotController extends Controller
             return;
         }
 
-        switch ($priority) {
-            case 'high':
-                $task->update(['priority' => 'високий']);
-                break;
-            case 'medium':
-                $task->update(['priority' => 'середній']);
-                break;
-            case 'low':
-                $task->update(['priority' => 'низький']);
-                break;
-            default:
-                $this->sendMessage($chatId, "❌ Невірний вибір пріоритету.");
-                return;
+        $priorityMap = [
+            'high' => 'високий',
+            'medium' => 'середній',
+            'low' => 'низький'
+        ];
+
+        if (!isset($priorityMap[$priority])) {
+            $this->sendMessage($chatId, "❗ Невірний пріоритет.");
+            return;
         }
 
-        Cache::put("add_task_{$chatId}_step", 'get_reminder', now()->addMinutes(5));
-        $this->sendMessage($chatId, "⏰ Введіть дату та час для нагадування (наприклад, 2025-05-10 14:30).");
-    }
+        $task->update(['priority' => $priorityMap[$priority]]);
 
+        Cache::put("add_task_{$chatId}_step", 'get_reminder', now()->addMinutes(5));
+        $this->sendMessage($chatId, "🕒 Введіть дату та час нагадування (наприклад, 2025-05-10 14:30):");
+    }
     protected function setTaskReminder($chatId, $reminder)
     {
-        $taskId = Cache::get("add_task_{$chatId}_task_id");
+        $taskId = Cache::pull("add_task_{$chatId}_task_id");
         $task = Task::where('chat_id', $chatId)->where('id', $taskId)->first();
 
         if (!$task) {
@@ -149,8 +157,12 @@ class BotController extends Controller
             'reminder_time' => $reminderTime,
         ]);
 
-        $this->sendMessage($chatId, "✅ Нагадування встановлено для: {$reminderTime->format('d-m-Y H:i')}");
-        $this->sendMessage($chatId, "📅 Завдання додано успішно!", [
+        // Тут можна створити окремі нагадування за допомогою jobs або scheduler
+        // Наприклад, використовуючи черги або Laravel scheduler (див. нижче)
+
+        $this->sendMessage($chatId, "✅ Нагадування встановлено на {$reminderTime->format('d.m.Y H:i')}");
+
+        $this->sendMessage($chatId, "✅ Завдання збережено!", [
             'reply_markup' => [
                 'inline_keyboard' => [
                     [['text' => '🗑 Видалити', 'callback_data' => "delete:{$task->id}"]],
@@ -160,7 +172,6 @@ class BotController extends Controller
 
         Cache::forget("add_task_{$chatId}_step");
     }
-
     protected function sendMessage($chatId, $text, array $options = [])
     {
         Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/sendMessage", array_merge([
