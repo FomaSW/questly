@@ -15,7 +15,7 @@ class BotController extends Controller
     protected function handleCallback(array $callback)
     {
         $chatId = $callback['message']['chat']['id'];
-        $data = $callback['callback_data'];
+        $data = $callback['data']; // Виправлено: 'callback_data' -> 'data'
         $user = User::where('chat_id', $chatId)->first();
 
         if ($user) {
