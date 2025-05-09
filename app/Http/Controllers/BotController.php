@@ -367,7 +367,7 @@ class BotController extends Controller
 
         if ($choice === 'none') {
             $task->update(['deadline' => null]);
-            $message = __('bot.task_added_no_deadline');
+            $message = __('bot.task_added_no_deadline', $this->mainMenuKeyboard());
         } else {
             $deadline = now()->startOfDay();
             if ($choice === 'tomorrow') {
@@ -401,19 +401,30 @@ class BotController extends Controller
 
     protected function showTasksByDate($chatId, $date)
     {
-        $tasks = Task::where('chat_id', $chatId)
-            ->whereDate('deadline', $date)
-            ->orderBy('priority')
+        $query = Task::where('chat_id', $chatId);
+
+        if ($date === null) {
+            // Завдання без дедлайну
+            $query->whereNull('deadline');
+            $dateText = __('bot.no_deadline');
+        } else {
+            // Завдання з конкретною датою
+            $query->whereDate('deadline', $date);
+            $dateText = $date->format('d.m.Y');
+        }
+
+        $tasks = $query->orderBy('priority')
             ->get()
             ->map(function ($task) {
-                // Перетворюємо deadline з рядка на Carbon
-                $task->deadline = Carbon::parse($task->deadline);
+                if ($task->deadline) {
+                    $task->deadline = Carbon::parse($task->deadline);
+                }
                 return $task;
             });
 
         if ($tasks->isEmpty()) {
             $this->sendMessage($chatId, __('bot.no_tasks_date', [
-                'date' => $date->format('d.m.Y')
+                'date' => $dateText
             ]), $this->mainMenuKeyboard());
             return;
         }
@@ -423,7 +434,7 @@ class BotController extends Controller
             $done = $task->is_done ? __('bot.done') : __('bot.not_done');
             $this->sendMessage(
                 $chatId,
-                "{$priorityEmoji} {$task->title} {$done}",
+                "{$priorityEmoji} {$task->title}\n {$done}",
                 $this->taskOptionsKeyboard($task->id, $task->is_done)
             );
         }
