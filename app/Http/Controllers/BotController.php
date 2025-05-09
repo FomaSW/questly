@@ -146,7 +146,7 @@ class BotController extends Controller
         }
 
         if ($data === 'archive') {
-            $this->showArchive($chatId);
+            $this->showArchive($chatId, $language);
             return;
         }
 
@@ -413,17 +413,17 @@ class BotController extends Controller
         $this->sendMessage($chatId, __('bot.task_list_footer'), $this->mainMenuKeyboard());
     }
 
-    protected function showArchive($chatId)
+    protected function showArchive($chatId , $language)
     {
         $today = Carbon::today();
         $tenDaysAgo = $today->copy()->subDays(9); // 10 днів включаючи сьогодні
-
         // Створюємо кнопки для кожного дня
         $daysButtons = [];
-        for ($i = 9; $i >= 0; $i--) {
+        for ($i = 0; $i >= 9; $i++) {
             $date = $today->copy()->subDays($i);
+            $dayName = $date->locale($language)->isoFormat('dddd');
             $daysButtons[] = [
-                'text' => $date->format('d.m.Y'),
+                'text' => $dayName . ' ' . $date->format('d.m.Y'),
                 'callback_data' => 'archive_day:' . $date->format('Y-m-d')
             ];
         }
