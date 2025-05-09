@@ -67,6 +67,7 @@ return [
 
     'done' => '✅ Виконано',
     'not_done' => 'Невиконано',
+    'tasks' => 'Цілі',
     'today_tasks' => 'Задачі на сьогодні',
     'tomorrow_tasks' => 'Задачі на завтра',
     'archive'=> 'Архів',

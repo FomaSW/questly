@@ -140,6 +140,11 @@ class BotController extends Controller
             return;
         }
 
+        if ($data === 'tasks') {
+            $this->showTasksByDate($chatId, null);
+            return;
+        }
+
         if ($data === 'tomorrow_tasks') {
             $this->showTasksByDate($chatId, now()->addDay()->startOfDay());
             return;
@@ -157,7 +162,7 @@ class BotController extends Controller
         }
 
         if ($data === 'back_to_archive') {
-            $this->showArchive($chatId);
+            $this->showArchive($chatId, $language);
             return;
         }
 
@@ -196,6 +201,7 @@ class BotController extends Controller
             'reply_markup' => [
                 'inline_keyboard' => [
                     [
+                        ['text' => __('bot.tasks'), 'callback_data' => 'tasks'],
                         ['text' => __('bot.today_tasks'), 'callback_data' => 'today_tasks'],
                         ['text' => __('bot.tomorrow_tasks'), 'callback_data' => 'tomorrow_tasks']
                     ],
@@ -295,7 +301,6 @@ class BotController extends Controller
             'title' => $title,
             'priority' => 1,
             'is_done' => false,
-            'deadline' => now()->addDay()->startOfDay(),
         ]);
 
         Cache::put("add_task_{$chatId}_task_id", $task->id, now()->addMinutes(5));
@@ -338,6 +343,9 @@ class BotController extends Controller
                         ['text' => __('bot.today'), 'callback_data' => 'deadline:today'],
                         ['text' => __('bot.tomorrow'), 'callback_data' => 'deadline:tomorrow']
                     ],
+                    [
+                        ['text' => __('bot.no_deadline'), 'callback_data' => 'deadline:none']
+                    ],
                     [['text' => __('bot.back_to_menu'), 'callback_data' => 'back_to_main']]
                 ]
             ]
@@ -355,19 +363,22 @@ class BotController extends Controller
             return;
         }
 
-        $deadline = now()->startOfDay();
-        if ($choice === 'tomorrow') {
-            $deadline = $deadline->addDay();
+        if ($choice === 'none') {
+            $task->update(['deadline' => null]);
+            $message = __('bot.task_added_no_deadline');
+        } else {
+            $deadline = now()->startOfDay();
+            if ($choice === 'tomorrow') {
+                $deadline = $deadline->addDay();
+            }
+            $task->update(['deadline' => $deadline]);
+            $message = __('bot.deadline_set', ['deadline' => $deadline->format('d.m.Y')]);
         }
-
-        $task->update(['deadline' => $deadline]);
 
         Cache::forget("add_task_{$chatId}_task_id");
         Cache::forget("add_task_{$chatId}_step");
 
-        $this->sendMessage($chatId, __('bot.deadline_set', [
-            'deadline' => $deadline->format('d.m.Y')
-        ]), $this->taskOptionsKeyboard($taskId));
+        $this->sendMessage($chatId, $message, $this->taskOptionsKeyboard($taskId));
     }
 
     protected function taskOptionsKeyboard($taskId, $is_done = false)

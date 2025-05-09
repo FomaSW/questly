@@ -67,6 +67,7 @@ return [
 
     'done' => '✅ Done',
     'not_done' => 'Not Done',
+    'tasks' => 'Goals',
     'today_tasks' => 'Today tasks',
     'tomorrow_tasks' => 'Tomorrow tasks',
     'archive'=> 'Archive',
