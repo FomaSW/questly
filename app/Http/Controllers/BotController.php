@@ -405,7 +405,14 @@ class BotController extends Controller
 
     protected function setTaskDeadline($chatId, $deadline)
     {
-        $taskId = Cache::pull("add_task_{$chatId}_task_id");
+        // Отримуємо ID завдання з кешу (без видалення)
+        $taskId = Cache::get("add_task_{$chatId}_task_id");
+
+        if (!$taskId) {
+            $this->sendMessage($chatId, __('bot.task_not_found'));
+            return;
+        }
+
         $task = Task::where('chat_id', $chatId)->where('id', $taskId)->first();
 
         if (!$task) {
@@ -418,20 +425,21 @@ class BotController extends Controller
 
             if ($deadlineTime->isPast()) {
                 $this->sendMessage($chatId, __('bot.deadline_in_past'));
-                Cache::put("add_task_{$chatId}_task_id", $taskId, now()->addMinutes(5));
                 Cache::put("add_task_{$chatId}_step", 'get_deadline', now()->addMinutes(5));
                 return;
             }
         } catch (\Exception $e) {
             $this->sendMessage($chatId, __('bot.invalid_date_format'));
-            Cache::put("add_task_{$chatId}_task_id", $taskId, now()->addMinutes(5));
             Cache::put("add_task_{$chatId}_step", 'get_deadline', now()->addMinutes(5));
             return;
         }
 
-        $task->update([
-            'deadline' => $deadlineTime,
-        ]);
+        // Оновлюємо дедлайн
+        $task->update(['deadline' => $deadlineTime]);
+
+        // Видаляємо дані з кешу тільки після успішного збереження
+        Cache::forget("add_task_{$chatId}_task_id");
+        Cache::forget("add_task_{$chatId}_step");
 
         // Створення нагадувань
         $this->createReminders($task);
@@ -449,8 +457,6 @@ class BotController extends Controller
                 ]
             ]
         ]);
-
-        Cache::forget("add_task_{$chatId}_step");
     }
 
     protected function createReminders($task)
