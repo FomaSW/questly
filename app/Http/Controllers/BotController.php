@@ -77,7 +77,7 @@ class BotController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
-    public function handleMessage(array $message)
+    protected function handleMessage(array $message)
     {
         $chatId = $message['chat']['id'];
         $text = trim($message['text'] ?? '');
@@ -96,12 +96,15 @@ class BotController extends Controller
             ]
         );
 
+        // Визначаємо крок
+        $step = Cache::get("add_task_{$chatId}_step");
+
         if ($text === '/start') {
             $this->sendMessage($chatId, __("bot.welcome", ['name' => $user->first_name]), [
                 'reply_markup' => [
                     'inline_keyboard' => [
-                        [['text' => '➕ Додати задачу', 'callback_data' => 'add_task']],
-                        [['text' => '📋 Список задач', 'callback_data' => 'list_tasks']],
+                        [['text' => '➕ Додати', 'callback_data' => 'add_task']],
+                        [['text' => '📋 Список', 'callback_data' => 'list_tasks']],
                         [['text' => '⚙️ Налаштування', 'callback_data' => 'settings']],
                     ]
                 ]
@@ -109,22 +112,21 @@ class BotController extends Controller
             return;
         }
 
-        if (Cache::get("add_task_{$chatId}_step") === 'get_title') {
+        // Крок 1: введення назви
+        if ($step === 'get_title') {
             $this->startAddingTask($chatId, $text);
-        } elseif (Cache::get("add_task_{$chatId}_step") === 'get_reminder') {
-            $this->setTaskReminder($chatId, $text);
-        } else {
-            $this->sendMessage($chatId, "🤖 Обери дію з меню:", [
-                'reply_markup' => [
-                    'inline_keyboard' => [
-                        [['text' => '➕ Додати задачу', 'callback_data' => 'add_task']],
-                        [['text' => '📋 Список задач', 'callback_data' => 'list_tasks']],
-                        [['text' => '⚙️ Налаштування', 'callback_data' => 'settings']],
-                    ]
-                ]
-            ]);
+            return;
         }
+
+        // Крок 3: введення нагадування
+        if ($step === 'get_reminder') {
+            $this->setTaskReminder($chatId, $text);
+            return;
+        }
+
+        $this->sendMessage($chatId, "🤖 Я не впізнаю цю команду. Обери дію з меню або спробуй /start.");
     }
+
     protected function startAddingTask($chatId, $title)
     {
         if (empty($title)) {
