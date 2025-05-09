@@ -98,7 +98,7 @@ class BotController extends Controller
         }
 
         if (str_starts_with($data, 'motivation_time:')) {
-            $time = explode(':', $data)[1];
+            $time = explode(':', $data)[1] . explode(':', $data)[2];
             $this->setMotivationTime($chatId, $time);
             return;
         }
