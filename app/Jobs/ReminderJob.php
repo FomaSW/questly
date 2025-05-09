@@ -42,8 +42,13 @@ class ReminderJob implements ShouldQueue
         if (!$user || $this->task->is_done) {
             return;
         }
+        $locale = [
+            0 => 'uk',
+            1 => 'en',
+            2 => 'ru'
+        ];
 
-        App::setLocale($user->language);
+        App::setLocale($locale[$user->lang]);
 
         $message = ($this->type === 'day_before')
             ? __('bot.reminder_day_before', ['task' => $this->task->title, 'deadline' => $this->task->deadline->format('d.m.Y H:i')])

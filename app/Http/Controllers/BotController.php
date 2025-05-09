@@ -15,14 +15,25 @@ class BotController extends Controller
     protected function handleCallback(array $callback)
     {
         $chatId = $callback['message']['chat']['id'];
-        $data = $callback['data']; // Виправлено: 'callback_data' -> 'data'
+        $data = $callback['data']; // Виправлено раніше
         $user = User::where('chat_id', $chatId)->first();
 
         if ($user) {
-            App::setLocale($user->lang ?? 'uk');
+            // Перевірка, що мова є рядком
+            $language = $user->language;
+            if (is_numeric($language)) {
+                // Конвертуємо числовий індекс у код мови
+                $languageCodes = [0 => 'uk', 1 => 'en', 2 => 'ru'];
+                $language = $languageCodes[$language] ?? 'uk';
+
+                // Можливо, варто оновити запис користувача
+                $user->update(['language' => $language]);
+            }
+
+            App::setLocale($language ?? 'uk');
         }
 
-        // Підтвердження обробки callback
+        // Решта коду залишається без змін
         Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/answerCallbackQuery", [
             'callback_query_id' => $callback['id'],
         ]);
@@ -199,25 +210,47 @@ class BotController extends Controller
         ]);
     }
 
-    protected function setUserLanguage($chatId, $lang)
+    protected function setUserLanguage($chatId, $langCode): void
     {
-        $user = User::updateOrCreate(
-            ['chat_id' => $chatId],
-            [
-                'lang' => $lang,
-            ]
-        );
-        $locale = [
+        // Перетворення числових індексів на відповідні коди мов
+        $languageCodes = [
             0 => 'uk',
             1 => 'en',
             2 => 'ru'
         ];
 
-        App::setLocale($locale[$lang]);
+        // Якщо langCode є числом (індексом), конвертуємо його в код мови
+        if (is_numeric($langCode) && isset($languageCodes[$langCode])) {
+            $langCode = $languageCodes[$langCode];
+        }
 
-        $this->sendMessage($chatId, __('bot.language_selected'));
+        // Тепер оновлюємо мову користувача
+        $user = User::where('chat_id', $chatId)->first();
+
+        if ($user) {
+            $user->update(['language' => $langCode]);
+        } else {
+            User::create([
+                'chat_id' => $chatId,
+                'language' => $langCode
+            ]);
+        }
+
+        // Встановлюємо локаль для поточного запиту
+        App::setLocale($langCode);
+
+        // Повідомлення користувача про зміну мови
+        $messages = [
+            'uk' => 'Мову змінено на українську',
+            'en' => 'Language changed to English',
+            'ru' => 'Язык изменен на русский'
+        ];
+
+        $message = $messages[$langCode] ?? 'Мову змінено';
+        $this->sendMessage($chatId, $message);
         $this->showMainMenu($chatId);
     }
+
 
     protected function showMainMenu($chatId)
     {
