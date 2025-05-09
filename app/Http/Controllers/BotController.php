@@ -118,6 +118,12 @@ class BotController extends Controller
             return;
         }
 
+        // Крок 1: введення назви
+        if ($step === 'get_priority') {
+            $this->setTaskPriority($chatId, $text);
+            return;
+        }
+
         // Крок 3: введення нагадування
         if ($step === 'get_reminder') {
             $this->setTaskReminder($chatId, $text);
