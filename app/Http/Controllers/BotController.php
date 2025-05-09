@@ -419,7 +419,7 @@ class BotController extends Controller
         $tenDaysAgo = $today->copy()->subDays(9); // 10 днів включаючи сьогодні
         // Створюємо кнопки для кожного дня
         $daysButtons = [];
-        for ($i = 0; $i >= 9; $i++) {
+        for ($i = 0; $i <= 9; $i++) {
             $date = $today->copy()->subDays($i);
             $dayName = $date->locale($language)->isoFormat('dddd');
             $daysButtons[] = [
