@@ -404,7 +404,12 @@ class BotController extends Controller
         $tasks = Task::where('chat_id', $chatId)
             ->whereDate('deadline', $date)
             ->orderBy('priority')
-            ->get();
+            ->get()
+            ->map(function ($task) {
+                // Перетворюємо deadline з рядка на Carbon
+                $task->deadline = Carbon::parse($task->deadline);
+                return $task;
+            });
 
         if ($tasks->isEmpty()) {
             $this->sendMessage($chatId, __('bot.no_tasks_date', [
@@ -460,7 +465,12 @@ class BotController extends Controller
         $tasks = Task::where('chat_id', $chatId)
             ->whereDate('deadline', $date)
             ->orderBy('deadline', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($task) {
+                // Перетворюємо deadline з рядка на Carbon
+                $task->deadline = Carbon::parse($task->deadline);
+                return $task;
+            });
 
         if ($tasks->isEmpty()) {
             $this->sendMessage($chatId, __('bot.archive_empty_day', [
