@@ -11,19 +11,61 @@ use Carbon\Carbon;
 
 class BotController extends Controller
 {
-    public function handleCallback(array $callback)
+    protected function handleCallback(array $callback)
     {
         $chatId = $callback['message']['chat']['id'];
         $data = $callback['data'];
 
+        // Підтвердження обробки callback
+        Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/answerCallbackQuery", [
+            'callback_query_id' => $callback['id'],
+        ]);
+
         if ($data === 'add_task') {
             $this->sendMessage($chatId, "✏️ Напиши назву задачі:");
             Cache::put("add_task_{$chatId}_step", 'get_title', now()->addMinutes(5));
-        } elseif (str_starts_with($data, 'priority:')) {
-            $priority = explode(':', $data)[1];
-            $this->setTaskPriority($chatId, $priority);
+            return;
+        }
+
+        if (str_starts_with($data, 'priority:')) {
+            $priorityKey = explode(':', $data)[1];
+            $this->setTaskPriority($chatId, $priorityKey);
+            return;
+        }
+
+        if ($data === 'settings') {
+            $this->sendMessage($chatId, "⚙️ Налаштування поки недоступні.");
+            return;
+        }
+
+        if ($data === 'list_tasks') {
+            $tasks = Task::where('chat_id', $chatId)->orderByDesc('created_at')->take(5)->get();
+
+            if ($tasks->isEmpty()) {
+                $this->sendMessage($chatId, "📭 Список задач порожній.");
+            } else {
+                foreach ($tasks as $task) {
+                    $doneText = $task->is_done ? "✅" : "⬜️";
+                    $this->sendMessage($chatId, "{$doneText} {$task->title}\nПріоритет: {$task->priority}\nНагадування: " . ($task->reminder_time ? $task->reminder_time->format('d.m.Y H:i') : "не встановлено"), [
+                        'reply_markup' => [
+                            'inline_keyboard' => [
+                                [['text' => '🗑 Видалити', 'callback_data' => "delete:{$task->id}"]],
+                            ]
+                        ]
+                    ]);
+                }
+            }
+
+            return;
+        }
+
+        if (str_starts_with($data, 'delete:')) {
+            $taskId = (int) str_replace('delete:', '', $data);
+            Task::where('chat_id', $chatId)->where('id', $taskId)->delete();
+            $this->sendMessage($chatId, "🗑 Завдання видалено.");
         }
     }
+
     public function handleWebhook(Request $request): \Illuminate\Http\JsonResponse
     {
         $data = $request->all();
