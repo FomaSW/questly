@@ -195,7 +195,7 @@ class BotController extends Controller
 
         // Крок 3: введення дедлайну
         if ($step === 'get_deadline') {
-            $this->setTaskDeadline($chatId, $text);
+            $this->processDeadlineInput($chatId, $text);
             return;
         }
 
@@ -225,7 +225,7 @@ class BotController extends Controller
                 'inline_keyboard' => [
                     [['text' => '🇺🇦 Українська', 'callback_data' => 'lang:uk']],
                     [['text' => '🇬🇧 English', 'callback_data' => 'lang:en']],
-                    [['text' => '🇷🇺 Русский', 'callback_data' => 'lang:ru']],
+                    [['text' => '💩 Русский', 'callback_data' => 'lang:ru']],
                 ]
             ]
         ]);
@@ -306,7 +306,7 @@ class BotController extends Controller
                 'inline_keyboard' => [
                     [['text' => '🇺🇦 Українська', 'callback_data' => 'lang:uk']],
                     [['text' => '🇬🇧 English', 'callback_data' => 'lang:en']],
-                    [['text' => '🇷🇺 Русский', 'callback_data' => 'lang:ru']],
+                    [['text' => '💩 Русский', 'callback_data' => 'lang:ru']],
                     [['text' => __('bot.back'), 'callback_data' => 'settings']],
                 ]
             ]
@@ -403,9 +403,8 @@ class BotController extends Controller
         $this->sendMessage($chatId, __('bot.enter_deadline'));
     }
 
-    protected function setTaskDeadline($chatId, $deadline)
+    protected function processDeadlineInput($chatId, $input)
     {
-        // Отримуємо ID завдання з кешу (без видалення)
         $taskId = Cache::get("add_task_{$chatId}_task_id");
 
         if (!$taskId) {
@@ -413,45 +412,40 @@ class BotController extends Controller
             return;
         }
 
-        $task = Task::where('chat_id', $chatId)->where('id', $taskId)->first();
-
-        if (!$task) {
-            $this->sendMessage($chatId, __('bot.task_not_found'));
-            return;
-        }
-
         try {
-            $deadlineTime = Carbon::parse($deadline);
+            $deadline = Carbon::parse($input);
 
-            if ($deadlineTime->isPast()) {
+            if ($deadline->isPast()) {
                 $this->sendMessage($chatId, __('bot.deadline_in_past'));
-                Cache::put("add_task_{$chatId}_step", 'get_deadline', now()->addMinutes(5));
                 return;
             }
+
+            Task::where('id', $taskId)->update(['deadline' => $deadline]);
+
+            // Очищаємо кеш
+            Cache::forget("add_task_{$chatId}_task_id");
+            Cache::forget("add_task_{$chatId}_step");
+
+            $this->sendMessage($chatId, __('bot.deadline_set', [
+                'deadline' => $deadline->format('d.m.Y H:i')
+            ]));
+
+            $this->showTaskOptions($chatId, $taskId);
+
         } catch (\Exception $e) {
-            $this->sendMessage($chatId, __('bot.invalid_date_format'));
-            Cache::put("add_task_{$chatId}_step", 'get_deadline', now()->addMinutes(5));
-            return;
+            $this->sendMessage($chatId, __('bot.invalid_date_format') . "\n" .
+                __('bot.date_format_example'));
         }
+    }
 
-        // Оновлюємо дедлайн
-        $task->update(['deadline' => $deadlineTime]);
-
-        // Видаляємо дані з кешу тільки після успішного збереження
-        Cache::forget("add_task_{$chatId}_task_id");
-        Cache::forget("add_task_{$chatId}_step");
-
-        // Створення нагадувань
-        $this->createReminders($task);
-
-        $this->sendMessage($chatId, __('bot.deadline_set', ['deadline' => $deadlineTime->format('d.m.Y H:i')]));
-
+    protected function showTaskOptions($chatId, $taskId)
+    {
         $this->sendMessage($chatId, __('bot.task_saved'), [
             'reply_markup' => [
                 'inline_keyboard' => [
                     [
-                        ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$task->id}"],
-                        ['text' => __('bot.delete'), 'callback_data' => "delete:{$task->id}"]
+                        ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$taskId}"],
+                        ['text' => __('bot.delete'), 'callback_data' => "delete:{$taskId}"]
                     ],
                     [['text' => __('bot.back_to_menu'), 'callback_data' => 'back_to_main']],
                 ]
@@ -479,7 +473,6 @@ class BotController extends Controller
     protected function listTasks($chatId)
     {
         $tasks = Task::where('chat_id', $chatId)
-            ->where('is_done', false)
             ->orderBy('deadline')
             ->take(5)
             ->get();
@@ -499,17 +492,18 @@ class BotController extends Controller
         foreach ($tasks as $task) {
             $priorityEmoji = $this->getPriorityEmoji($task->priority);
             $deadlineText = $task->deadline ? $task->deadline->format('d.m.Y H:i') : __('bot.no_deadline');
-
+            $keyboard = [];
+            if ($task->is_done === false) {
+                $keyboard[] = ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$task->id}"];
+            }
+            $keyboard[] = ['text' => __('bot.delete'), 'callback_data' => "delete:{$task->id}"];
             $this->sendMessage(
                 $chatId,
                 "{$priorityEmoji} {$task->title}\n" . __('bot.deadline') . ": {$deadlineText}",
                 [
                     'reply_markup' => [
                         'inline_keyboard' => [
-                            [
-                                ['text' => __('bot.mark_done'), 'callback_data' => "mark_done:{$task->id}"],
-                                ['text' => __('bot.delete'), 'callback_data' => "delete:{$task->id}"]
-                            ],
+                            $keyboard,
                         ]
                     ]
                 ]
