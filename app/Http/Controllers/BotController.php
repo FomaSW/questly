@@ -171,6 +171,9 @@ class BotController extends Controller
         }
 
         $priorityMap = [
+            0 => __('bot.priority_high'),
+            1 => __('bot.priority_medium'),
+            2 => __('bot.priority_low'),
             'high' => 'високий',
             'medium' => 'середній',
             'low' => 'низький'
