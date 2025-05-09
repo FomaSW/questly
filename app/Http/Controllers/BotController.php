@@ -223,9 +223,9 @@ class BotController extends Controller
         $this->sendMessage($chatId, "🌐 Будь ласка, оберіть мову / Please select language / Пожалуйста, выберите язык", [
             'reply_markup' => [
                 'inline_keyboard' => [
-                    [['text' => '🇺🇦 Українська', 'callback_data' => 'lang:uk']],
-                    [['text' => '🇬🇧 English', 'callback_data' => 'lang:en']],
-                    [['text' => '💩 Русский', 'callback_data' => 'lang:ru']],
+                    [['text' => 'Українська', 'callback_data' => 'lang:uk']],
+                    [['text' => 'English', 'callback_data' => 'lang:en']],
+                    [['text' => 'Русский', 'callback_data' => 'lang:ru']],
                 ]
             ]
         ]);
@@ -304,9 +304,9 @@ class BotController extends Controller
         $this->sendMessage($chatId, __('bot.select_language'), [
             'reply_markup' => [
                 'inline_keyboard' => [
-                    [['text' => '🇺🇦 Українська', 'callback_data' => 'lang:uk']],
-                    [['text' => '🇬🇧 English', 'callback_data' => 'lang:en']],
-                    [['text' => '💩 Русский', 'callback_data' => 'lang:ru']],
+                    [['text' => 'Українська', 'callback_data' => 'lang:uk']],
+                    [['text' => 'English', 'callback_data' => 'lang:en']],
+                    [['text' => 'Русский', 'callback_data' => 'lang:ru']],
                     [['text' => __('bot.back'), 'callback_data' => 'settings']],
                 ]
             ]
