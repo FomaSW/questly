@@ -25,7 +25,7 @@ return [
     'menu' => '📋 Menu',
 
     // Main menu
-    'add_task' => '➕ Add Task',
+    'add_task' => '📗 Add Task',
     'list_tasks' => '📋 My Tasks',
     'settings' => '⚙️ Settings',
 
