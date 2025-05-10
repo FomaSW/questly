@@ -2,7 +2,18 @@
 
 return [
     // General
-    'welcome' => '👋 Welcome, :name! I\'m your personal task planner. How can I help you today?',
+    'welcome' => '👋 Welcome, :name! I’m Questly, your guide to achieving your goals.
+    Imagine you’re the main character in your own game. Here, you set your own quests, choose your own path, and earn your own rewards.
+    Every completed task is a step toward leveling up your real-life character.
+
+    Here, you can:
+
+    Set long-term goals without deadlines and move toward them step by step
+    Add simple tasks for the near future
+    Receive motivational messages from your loyal companion
+    And most importantly — see your progress and keep going
+
+    Ready to begin your journey? Choose a language and let’s create your first goal!',
     'language_selected' => '✅ English language has been selected successfully!',
     'only_private' => '❗ This bot works only in private messages.',
     'unknown_command' => '🤖 I don\'t recognize this command. Please use the menu or try /start.',
