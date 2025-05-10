@@ -201,15 +201,15 @@ class BotController extends Controller
             'reply_markup' => [
                 'inline_keyboard' => [
                     [
+                        ['text' => __('bot.add_task'), 'callback_data' => 'add_task']
+                    ],
+                    [
                         ['text' => __('bot.today_tasks'), 'callback_data' => 'today_tasks'],
                         ['text' => __('bot.tomorrow_tasks'), 'callback_data' => 'tomorrow_tasks']
                     ],
                     [
                         ['text' => __('bot.tasks'), 'callback_data' => 'tasks'],
                         ['text' => __('bot.archive'), 'callback_data' => 'archive'],
-                    ],
-                    [
-                        ['text' => __('bot.add_task'), 'callback_data' => 'add_task']
                     ],
                     [
                         ['text' => __('bot.settings'), 'callback_data' => 'settings']
@@ -380,7 +380,7 @@ class BotController extends Controller
         Cache::forget("add_task_{$chatId}_task_id");
         Cache::forget("add_task_{$chatId}_step");
 
-        $this->sendMessage($chatId, $message, $this->taskOptionsKeyboard($taskId));
+        $this->sendMessage($chatId, $message, $this->mainMenuKeyboard());
     }
 
     protected function taskOptionsKeyboard($taskId, $is_done = false)
