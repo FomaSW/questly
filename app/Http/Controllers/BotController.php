@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 
 class BotController extends Controller
 {
@@ -329,10 +330,9 @@ class BotController extends Controller
             $this->sendMessage($chatId, __('bot.task_not_found'), $this->mainMenuKeyboard());
             return;
         }
-
-        var_dump($priorityKey);
+        Log::error($priorityKey);
         $priorityNumber = $this->priorityValues[$priorityKey] ?? 1;
-        var_dump($priorityKey);
+        Log::error($priorityNumber);
         $task->update(['priority' => $priorityNumber]);
 
         $this->askForDeadline($chatId);
