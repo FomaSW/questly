@@ -330,7 +330,9 @@ class BotController extends Controller
             return;
         }
 
+        var_dump($priorityKey);
         $priorityNumber = $this->priorityValues[$priorityKey] ?? 1;
+        var_dump($priorityKey);
         $task->update(['priority' => $priorityNumber]);
 
         $this->askForDeadline($chatId);
