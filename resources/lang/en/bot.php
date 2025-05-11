@@ -15,6 +15,7 @@ return [
 
     Ready to begin your journey? Choose a language and let’s create your first goal!',
     'language_selected' => '✅ English language has been selected successfully!',
+    'welcome_start' => '👋 Welcome, :name! I\'m your personal task planner. How can I help you today?',
     'only_private' => '❗ This bot works only in private messages.',
     'unknown_command' => '🤖 I don\'t recognize this command. Please use the menu or try /start.',
     'back' => '⬅️ Back',
@@ -25,7 +26,7 @@ return [
     'menu' => '📋 Menu',
 
     // Main menu
-    'add_task' => '📗 Add Task',
+    'add_task' => '❇ Add Task ❇',
     'list_tasks' => '📋 My Tasks',
     'settings' => '⚙️ Settings',
 
@@ -40,6 +41,7 @@ return [
     'deadline_set' => '⏰ Deadline set to: :deadline',
     'deadline_in_past' => '❗ Deadline cannot be in the past. Try again.',
     'invalid_date_format' => '❗ Invalid date format. Use YYYY-MM-DD HH:MM format.',
+    'task_added_no_deadline' => 'Add indefinite task',
     'task_saved' => '✅ Task has been saved successfully!',
     'task_not_found' => '❌ Task not found.',
     'mark_done' => '✅ Done',
@@ -48,7 +50,7 @@ return [
     'task_marked_done' => '✅ Task marked as done.',
     'no_tasks' => '📭 You don\'t have any active tasks yet.',
     'deadline' => 'Deadline',
-    'no_deadline' => 'no deadline',
+    'no_deadline' => 'Indefinite',
     'back_to_menu' => '🏠 Return to main menu',
     'task_list_footer' => 'These are all your active tasks. What would you like to do next?',
 

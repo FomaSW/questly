@@ -230,10 +230,10 @@ class BotController extends Controller
         ];
     }
 
-    protected function showMainMenu($chatId)
+    protected function showMainMenu($chatId, $type = 'welcome_start' )
     {
         $user = User::where('chat_id', $chatId)->first();
-        $this->sendMessage($chatId, __('bot.welcome', ['name' => $user->first_name]), $this->mainMenuKeyboard());
+        $this->sendMessage($chatId, __("bot.$type", ['name' => $user->first_name]), $this->mainMenuKeyboard());
     }
 
     protected function showLanguageSelectionForNewUser($chatId, $message)
@@ -282,7 +282,7 @@ class BotController extends Controller
 
         $message = $messages[$langCode] ?? 'Мову змінено';
         $this->sendMessage($chatId, $message);
-        $this->showMainMenu($chatId);
+        $this->showMainMenu($chatId, 'welcome');
     }
 
     protected function startAddingTask($chatId)
@@ -542,9 +542,9 @@ class BotController extends Controller
     protected function getPriorityEmoji($priority)
     {
         $priorityMap = [
-            0 => '🔥', // високий
-            1 => '⚖️', // середній
-            2 => '💤'  // низький
+            0 => '🔴', // високий
+            1 => '️🟡', // середній
+            2 => '🟢'  // низький
         ];
 
         return $priorityMap[$priority] ?? '⚪';
