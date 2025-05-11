@@ -367,7 +367,7 @@ class BotController extends Controller
 
         if ($choice === 'none') {
             $task->update(['deadline' => null]);
-            $message = __('bot.task_added_no_deadline', $this->mainMenuKeyboard());
+            $message = __('bot.task_added_no_deadline');
         } else {
             $deadline = now()->startOfDay();
             if ($choice === 'tomorrow') {
