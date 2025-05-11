@@ -20,15 +20,15 @@ class BotController extends Controller
     ];
 
     protected $priorityValues = [
-        'High' => 1,
-        'Medium' => 2,
-        'Low' => 3,
-        'Високий' => 1,
-        'Середній' => 2,
-        'Низький' => 3,
-        'Высокий' => 1,
-        'Средний' => 2,
-        'Низкий' => 3
+        'high' => 1,
+        'medium' => 2,
+        'low' => 3,
+        'високий' => 1,
+        'середній' => 2,
+        'низький' => 3,
+        'высокий' => 1,
+        'средний' => 2,
+        'низкий' => 3
     ];
 
     protected $priorityLabels = [
